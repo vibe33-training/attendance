@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7fb">
+  <title>오늘의 출석 | 클래스온</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #20232f;
+      --muted: #898d9c;
+      --line: #eceef3;
+      --paper: #fff;
+      --canvas: #f6f7fb;
+      --purple: #6b5ce7;
+      --purple-dark: #5848d1;
+      --purple-soft: #f0eeff;
+      --green: #2f9d72;
+      --green-soft: #e7f6ef;
+      --amber: #d78a28;
+      --amber-soft: #fff4e3;
+      --red: #df696c;
+      --red-soft: #fff0ef;
+      --shadow: 0 12px 40px rgba(37, 39, 67, .06);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--canvas);
+      color: var(--ink);
+      font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    .app { min-height: 100vh; }
+    .topbar {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 5.2%;
+      background: rgba(255,255,255,.92);
+      border-bottom: 1px solid #eff0f4;
+    }
+    .brand { display:flex; align-items:center; gap:11px; font-size:17px; font-weight:800; letter-spacing:-.7px; }
+    .brand-mark {
+      display:grid; place-items:center; width:34px; height:34px; border-radius:11px;
+      background:var(--purple); color:white; box-shadow:0 5px 12px #6b5ce744;
+    }
+    .brand-mark svg { width:20px; height:20px; }
+    .top-right { display:flex; align-items:center; gap:20px; }
+    .school-pill { display:flex; align-items:center; gap:8px; color:#626677; font-size:13px; font-weight:650; }
+    .school-dot { width:8px; height:8px; background:#70c49c; border-radius:50%; }
+    .avatar {
+      display:grid; place-items:center; width:35px; height:35px; border-radius:50%;
+      background:#f0e9df; color:#865f42; font-size:12px; font-weight:800;
+    }
+    main { max-width:1190px; margin:0 auto; padding:40px 32px 64px; }
+    .eyebrow { color:var(--purple); font-size:12px; font-weight:800; letter-spacing:1px; }
+    .heading-row { display:flex; justify-content:space-between; align-items:flex-end; gap:24px; margin-bottom:28px; }
+    h1 { margin:6px 0 4px; font-size:30px; line-height:1.25; letter-spacing:-1.3px; }
+    .subheading { color:var(--muted); font-size:14px; }
+    .date-nav { display:flex; align-items:center; gap:12px; }
+    .date-arrows { display:flex; gap:5px; }
+    .icon-button {
+      display:grid; place-items:center; width:38px; height:38px; background:white;
+      border:1px solid var(--line); border-radius:11px; cursor:pointer; transition:.18s;
+    }
+    .icon-button:hover { border-color:#c9c4fa; color:var(--purple); }
+    .icon-button svg { width:17px; height:17px; }
+    .date-input {
+      width:168px; height:40px; padding:0 11px; color:#454858; background:white;
+      border:1px solid var(--line); border-radius:11px; outline:none;
+    }
+    .date-input:focus, .search:focus { border-color:#aaa1fa; box-shadow:0 0 0 3px #6b5ce71a; }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:15px; margin-bottom:24px; }
+    .stat {
+      display:flex; align-items:center; gap:14px; min-height:95px; padding:18px 20px;
+      background:var(--paper); border:1px solid #f0f1f5; border-radius:16px; box-shadow:0 3px 12px #262a3c05;
+    }
+    .stat-icon { flex:0 0 43px; display:grid; place-items:center; height:43px; border-radius:13px; }
+    .stat-icon svg { width:20px; height:20px; }
+    .stat-icon.total { color:#7163e7; background:#f0eeff; }
+    .stat-icon.present { color:#36a47a; background:#e8f7ef; }
+    .stat-icon.late { color:#d99437; background:#fff4e4; }
+    .stat-icon.absent { color:#df6f73; background:#fff0f0; }
+    .stat-label { color:var(--muted); font-size:12px; font-weight:600; }
+    .stat-number { margin-top:1px; font-size:24px; font-weight:800; letter-spacing:-1px; line-height:1.25; }
+    .stat-number small { color:#a0a3ae; font-size:13px; font-weight:600; letter-spacing:0; }
+    .progress-card {
+      display:flex; align-items:center; gap:20px; padding:18px 22px; margin-bottom:24px;
+      background:#f0eeff; border:1px solid #e8e5ff; border-radius:15px;
+    }
+    .progress-copy { flex:0 0 auto; }
+    .progress-copy strong { font-size:13px; }
+    .progress-copy span { display:block; margin-top:2px; color:#79748f; font-size:12px; }
+    .progress-track { height:8px; flex:1; overflow:hidden; background:#dedafb; border-radius:9px; }
+    .progress-fill { width:0; height:100%; background:var(--purple); border-radius:9px; transition:width .25s ease; }
+    .progress-percent { min-width:38px; color:var(--purple); text-align:right; font-size:14px; font-weight:800; }
+    .roster { overflow:hidden; background:white; border:1px solid #eff0f4; border-radius:17px; box-shadow:var(--shadow); }
+    .roster-head { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:21px 23px 17px; }
+    .roster-title { display:flex; align-items:center; gap:9px; font-size:17px; font-weight:800; letter-spacing:-.5px; }
+    .count-badge { padding:3px 8px; color:#77738e; background:#f4f3fa; border-radius:20px; font-size:11px; font-weight:700; letter-spacing:0; }
+    .roster-actions { display:flex; align-items:center; gap:9px; }
+    .search-wrap { position:relative; }
+    .search-wrap svg { position:absolute; top:11px; left:11px; width:16px; height:16px; color:#a3a5b0; pointer-events:none; }
+    .search { width:190px; height:38px; padding:0 12px 0 35px; outline:none; border:1px solid var(--line); border-radius:10px; transition:.18s; }
+    .search::placeholder { color:#aaacb7; }
+    .button {
+      display:inline-flex; justify-content:center; align-items:center; gap:7px; min-height:38px;
+      padding:0 13px; background:white; border:1px solid var(--line); border-radius:10px;
+      color:#65697a; font-size:12px; font-weight:700; cursor:pointer; transition:.18s;
+    }
+    .button:hover { border-color:#d4d0f8; color:var(--purple); }
+    .button svg { width:15px; height:15px; }
+    .button-primary { background:var(--purple); border-color:var(--purple); color:#fff; }
+    .button-primary:hover { background:var(--purple-dark); border-color:var(--purple-dark); color:#fff; }
+    .filters { display:flex; gap:7px; padding:0 23px 15px; }
+    .filter {
+      padding:6px 11px; color:#898c99; background:transparent; border:0; border-radius:8px;
+      font-size:12px; font-weight:650; cursor:pointer;
+    }
+    .filter:hover { background:#f7f6fc; }
+    .filter.active { color:var(--purple); background:var(--purple-soft); }
+    .table-wrap { overflow:auto; }
+    table { width:100%; border-collapse:collapse; text-align:left; }
+    thead { background:#fafafd; }
+    th { height:42px; color:#999cab; font-size:11px; font-weight:700; }
+    th:first-child, td:first-child { padding-left:24px; }
+    th:last-child, td:last-child { padding-right:22px; }
+    td { height:66px; border-top:1px solid #f2f3f6; color:#555969; font-size:13px; }
+    .student { display:flex; align-items:center; gap:11px; min-width:170px; }
+    .student-avatar {
+      display:grid; flex:0 0 36px; place-items:center; width:36px; height:36px; border-radius:12px;
+      font-size:12px; font-weight:800;
+    }
+    .student-name { color:#343744; font-weight:750; }
+    .student-sub { margin-top:1px; color:#a0a2ad; font-size:11px; }
+    .status-control { display:flex; gap:5px; }
+    .status {
+      min-width:51px; padding:5px 8px; color:#a0a2ad; background:#fafafd;
+      border:1px solid #f0f1f4; border-radius:7px; font-size:11px; font-weight:700; cursor:pointer;
+      transition:.15s;
+    }
+    .status:hover { border-color:#d9d7e8; }
+    .status[data-status="present"].selected { color:var(--green); background:var(--green-soft); border-color:#d8f0e4; }
+    .status[data-status="late"].selected { color:var(--amber); background:var(--amber-soft); border-color:#f8e9cd; }
+    .status[data-status="absent"].selected { color:var(--red); background:var(--red-soft); border-color:#f7dedd; }
+    .note { max-width:155px; color:#858896; font-size:12px; }
+    .delete-row { display:grid; place-items:center; width:30px; height:30px; color:#b3b5bf; background:transparent; border:0; border-radius:8px; cursor:pointer; }
+    .delete-row:hover { color:var(--red); background:var(--red-soft); }
+    .delete-row svg { width:15px; height:15px; }
+    .empty-state { padding:42px 15px; color:#9295a2; text-align:center; }
+    .roster-foot { display:flex; justify-content:space-between; gap:12px; padding:13px 22px; border-top:1px solid #f1f2f5; color:#9b9eaa; font-size:11px; }
+    .toast {
+      position:fixed; z-index:4; left:50%; bottom:24px; transform:translate(-50%,15px);
+      padding:10px 16px; color:white; background:#292b38; border-radius:10px;
+      box-shadow:0 8px 24px #17182730; opacity:0; pointer-events:none; transition:.22s;
+    }
+    .toast.show { transform:translate(-50%,0); opacity:1; }
+    .modal-backdrop { position:fixed; z-index:5; inset:0; display:none; place-items:center; padding:20px; background:#17182766; }
+    .modal-backdrop.open { display:grid; }
+    .modal { width:min(100%,420px); padding:24px; background:white; border-radius:18px; box-shadow:0 20px 70px #17182733; }
+    .modal-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+    .modal-head h2 { margin:0; font-size:19px; letter-spacing:-.5px; }
+    .modal-close { display:grid; place-items:center; width:32px; height:32px; color:#888b98; background:#f7f7fa; border:0; border-radius:9px; cursor:pointer; }
+    .field { display:block; margin:13px 0; color:#646777; font-size:12px; font-weight:700; }
+    .field input, .field select { display:block; width:100%; height:42px; margin-top:6px; padding:0 11px; outline:none; border:1px solid var(--line); border-radius:9px; color:var(--ink); background:white; }
+    .field input:focus, .field select:focus { border-color:#aaa1fa; box-shadow:0 0 0 3px #6b5ce71a; }
+    .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:22px; }
+    @media (max-width:760px) {
+      .topbar { height:62px; padding:0 20px; }
+      main { padding:30px 20px 50px; }
+      .heading-row { align-items:flex-start; flex-direction:column; gap:18px; }
+      .date-nav { width:100%; justify-content:space-between; }
+      .date-input { flex:1; max-width:220px; }
+      .stats { grid-template-columns:repeat(2,1fr); gap:10px; }
+      .stat { min-height:82px; padding:13px; gap:10px; }
+      .stat-icon { flex-basis:38px; height:38px; }
+      .stat-number { font-size:22px; }
+      .roster-head { align-items:flex-start; flex-direction:column; padding:19px 17px 14px; }
+      .roster-actions { width:100%; }
+      .search-wrap { flex:1; }
+      .search { width:100%; }
+      .filters { padding:0 17px 13px; overflow-x:auto; }
+      th:first-child, td:first-child { padding-left:17px; }
+      th:last-child, td:last-child { padding-right:17px; }
+      .roster-foot { padding:12px 17px; }
+    }
+    @media (max-width:460px) {
+      .top-right { gap:10px; }
+      .school-pill { font-size:11px; }
+      main { padding:25px 14px 40px; }
+      h1 { font-size:26px; }
+      .stat { gap:9px; padding:11px 9px; }
+      .stat-icon { flex-basis:34px; height:34px; border-radius:10px; }
+      .stat-icon svg { width:17px; }
+      .stat-number { font-size:20px; }
+      .progress-card { gap:12px; padding:14px; }
+      .progress-copy span { font-size:11px; }
+      .roster-actions { gap:6px; }
+      .roster-actions .button { padding:0 9px; font-size:11px; }
+      .roster-actions .button svg { width:14px; }
+      .search { height:36px; }
+      .search-wrap svg { top:10px; }
+      .student { min-width:140px; gap:8px; }
+      .status { min-width:44px; padding:5px 5px; font-size:10px; }
+      .note, th.note-col { display:none; }
+      .roster-foot { font-size:10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 5.5h14v14H5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m8 12 2.5 2.5L16.5 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 3v5m8-5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+        클래스온
+      </div>
+      <div class="top-right">
+        <div class="school-pill"><span class="school-dot"></span> 햇살초등학교 · 3학년 2반</div>
+        <div class="avatar" aria-label="선생님 프로필">김쌤</div>
+      </div>
+    </header>
+    <main>
+      <section class="heading-row" aria-label="출석 날짜">
+        <div>
+          <div class="eyebrow">CLASSROOM MANAGEMENT</div>
+          <h1>오늘의 출석</h1>
+          <div class="subheading">우리 반 출석 현황을 한눈에 확인해 보세요.</div>
+        </div>
+        <div class="date-nav">
+          <div class="date-arrows">
+            <button class="icon-button" id="prevDay" aria-label="전날"><svg viewBox="0 0 24 24" fill="none"><path d="m14.5 5-7 7 7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button class="icon-button" id="nextDay" aria-label="다음 날"><svg viewBox="0 0 24 24" fill="none"><path d="m9.5 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+          <input class="date-input" type="date" id="attendanceDate" aria-label="출석 날짜">
+        </div>
+      </section>
+
+      <section class="stats" aria-label="출석 요약">
+        <article class="stat"><span class="stat-icon total"><svg viewBox="0 0 24 24" fill="none"><path d="M16 20v-1.5a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4V20m7.5-9a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm6-7.5a4 4 0 0 1 0 7.7m2 3.3a4 4 0 0 1 3 3.9V20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><div><div class="stat-label">전체 학생</div><div class="stat-number" id="totalCount">0<small>명</small></div></div></article>
+        <article class="stat"><span class="stat-icon present"><svg viewBox="0 0 24 24" fill="none"><path d="m5 12.5 4.5 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/></svg></span><div><div class="stat-label">출석</div><div class="stat-number" id="presentCount">0<small>명</small></div></div></article>
+        <article class="stat"><span class="stat-icon late"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><div class="stat-label">지각</div><div class="stat-number" id="lateCount">0<small>명</small></div></div></article>
+        <article class="stat"><span class="stat-icon absent"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="m9 9 6 6m0-6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><div><div class="stat-label">결석</div><div class="stat-number" id="absentCount">0<small>명</small></div></div></article>
+      </section>
+
+      <section class="progress-card" aria-label="출석 입력 진행률">
+        <div class="progress-copy"><strong>출석 체크 진행률</strong><span id="progressText">아직 체크한 학생이 없어요.</span></div>
+        <div class="progress-track" role="progressbar" aria-label="출석 입력 진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-percent" id="progressPercent">0%</div>
+      </section>
+
+      <section class="roster" aria-label="학생 출석부">
+        <div class="roster-head">
+          <div class="roster-title">학생 출석부 <span class="count-badge" id="rosterCount">0명</span></div>
+          <div class="roster-actions">
+            <label class="search-wrap"><svg viewBox="0 0 24 24" fill="none"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input class="search" type="search" id="searchInput" placeholder="이름 검색" aria-label="학생 이름 검색"></label>
+            <button class="button" id="exportButton"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 16v4h14v-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>내보내기</button>
+            <button class="button button-primary" id="addButton"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>학생 추가</button>
+          </div>
+        </div>
+        <div class="filters" role="group" aria-label="출석 상태 필터">
+          <button class="filter active" data-filter="all">전체</button>
+          <button class="filter" data-filter="present">출석</button>
+          <button class="filter" data-filter="late">지각</button>
+          <button class="filter" data-filter="absent">결석</button>
+          <button class="filter" data-filter="unchecked">미체크</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>학생</th><th>출석 상태</th><th class="note-col">메모</th><th aria-label="관리"></th></tr></thead>
+            <tbody id="studentRows"></tbody>
+          </table>
+          <div class="empty-state" id="emptyState" hidden>조건에 맞는 학생이 없습니다.</div>
+        </div>
+        <div class="roster-foot"><span>상태를 선택하면 자동 저장됩니다.</span><span id="footerDate"></span></div>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="modal-backdrop" id="modalBackdrop">
+    <form class="modal" id="studentForm" aria-labelledby="modalTitle">
+      <div class="modal-head"><h2 id="modalTitle">새 학생 추가</h2><button class="modal-close" type="button" id="closeModal" aria-label="닫기">×</button></div>
+      <label class="field">학생 이름<input id="studentName" name="name" maxlength="20" placeholder="이름을 입력해 주세요" required></label>
+      <label class="field">번호<input id="studentNumber" name="number" type="number" min="1" placeholder="예: 25"></label>
+      <label class="field">메모<input id="studentNote" name="note" maxlength="50" placeholder="선택 사항"></label>
+      <div class="modal-actions"><button class="button" type="button" id="cancelModal">취소</button><button class="button button-primary" type="submit">추가하기</button></div>
+    </form>
+  </div>
+  <script>
+    (() => {
+      const STORAGE_KEY = "classon-attendance-v1";
+      const palette = [
+        ["#f1eaff", "#7557c8"], ["#e6f4f1", "#398d79"], ["#fff0e4", "#c47a3c"],
+        ["#e8efff", "#5477bf"], ["#ffeaf0", "#bf6581"], ["#edf3df", "#758d40"]
+      ];
+      const starterStudents = [
+        { id: "s01", name: "김민준", number: 1, note: "급식 알레르기 확인" },
+        { id: "s02", name: "이서윤", number: 2, note: "" },
+        { id: "s03", name: "박도윤", number: 3, note: "" },
+        { id: "s04", name: "최하은", number: 4, note: "오늘 현장 체험" },
+        { id: "s05", name: "정이준", number: 5, note: "" },
+        { id: "s06", name: "한지우", number: 6, note: "" },
+        { id: "s07", name: "오시우", number: 7, note: "" },
+        { id: "s08", name: "윤서아", number: 8, note: "" }
+      ];
+      const colors = Object.fromEntries(starterStudents.map((s, i) => [s.id, i]));
+      let state = loadState();
+      let activeFilter = "all";
+      let toastTimer;
+      const $ = (selector) => document.querySelector(selector);
+      const dateInput = $("#attendanceDate");
+
+      function todayKey() {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      }
+      function loadState() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+          if (saved && Array.isArray(saved.students) && saved.attendance && typeof saved.attendance === "object") return saved;
+        } catch (error) {
+          console.warn("출석 데이터를 불러오지 못했습니다.", error);
+        }
+        return { students: starterStudents, attendance: {} };
+      }
+      function persist() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (error) {
+          console.error("출석 데이터를 저장하지 못했습니다.", error);
+          showToast("저장에 실패했어요. 브라우저 저장 공간을 확인해 주세요.");
+        }
+      }
+      function attendanceForDate() {
+        return state.attendance[dateInput.value] || (state.attendance[dateInput.value] = {});
+      }
+      function statusFor(student) {
+        return attendanceForDate()[student.id] || "";
+      }
+      function updateSummary() {
+        const statuses = state.students.map(statusFor);
+        const counts = {
+          present: statuses.filter((x) => x === "present").length,
+          late: statuses.filter((x) => x === "late").length,
+          absent: statuses.filter((x) => x === "absent").length
+        };
+        const checked = counts.present + counts.late + counts.absent;
+        const percent = state.students.length ? Math.round(checked / state.students.length * 100) : 0;
+        $("#totalCount").innerHTML = `${state.students.length}<small>명</small>`;
+        $("#presentCount").innerHTML = `${counts.present}<small>명</small>`;
+        $("#lateCount").innerHTML = `${counts.late}<small>명</small>`;
+        $("#absentCount").innerHTML = `${counts.absent}<small>명</small>`;
+        $("#rosterCount").textContent = `${state.students.length}명`;
+        $("#progressFill").style.width = `${percent}%`;
+        $("#progressPercent").textContent = `${percent}%`;
+        $("#progressTrack").setAttribute("aria-valuenow", String(percent));
+        $("#progressText").textContent = checked === state.students.length && checked > 0
+          ? "모든 학생의 출석 확인을 마쳤어요!"
+          : checked ? `${checked}명 확인 완료 · ${state.students.length - checked}명 남았어요.` : "아직 체크한 학생이 없어요.";
+        const date = new Date(`${dateInput.value}T00:00:00`);
+        $("#footerDate").textContent = Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
+      }
+      function render() {
+        const query = $("#searchInput").value.trim().toLocaleLowerCase("ko");
+        const visible = state.students.filter((student) => {
+          const status = statusFor(student);
+          const matchesFilter = activeFilter === "all" ||
+            (activeFilter === "unchecked" ? !status : status === activeFilter);
+          return matchesFilter && student.name.toLocaleLowerCase("ko").includes(query);
+        }).sort((a, b) => Number(a.number || 999) - Number(b.number || 999));
+        $("#studentRows").innerHTML = visible.map((student) => {
+          const index = colors[student.id] ?? (student.name.charCodeAt(0) % palette.length);
+          const [background, foreground] = palette[index % palette.length];
+          const selected = statusFor(student);
+          return `<tr>
+            <td><div class="student"><span class="student-avatar" style="background:${background};color:${foreground}">${escapeHtml(student.name.slice(0, 1))}</span><div><div class="student-name">${escapeHtml(student.name)}</div><div class="student-sub">${student.number ? `${escapeHtml(String(student.number))}번` : "학생"}</div></div></div></td>
+            <td><div class="status-control" aria-label="${escapeHtml(student.name)} 출석 상태">
+              <button class="status ${selected === "present" ? "selected" : ""}" data-id="${escapeHtml(student.id)}" data-status="present" aria-pressed="${selected === "present"}">출석</button>
+              <button class="status ${selected === "late" ? "selected" : ""}" data-id="${escapeHtml(student.id)}" data-status="late" aria-pressed="${selected === "late"}">지각</button>
+              <button class="status ${selected === "absent" ? "selected" : ""}" data-id="${escapeHtml(student.id)}" data-status="absent" aria-pressed="${selected === "absent"}">결석</button>
+            </div></td>
+            <td class="note note-col">${student.note ? escapeHtml(student.note) : "—"}</td>
+            <td><button class="delete-row" data-delete="${escapeHtml(student.id)}" aria-label="${escapeHtml(student.name)} 삭제"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16m-10 4v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button></td>
+          </tr>`;
+        }).join("");
+        $("#emptyState").hidden = visible.length > 0;
+        $("#studentRows").parentElement.hidden = visible.length === 0;
+        updateSummary();
+      }
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+      }
+      function showToast(message) {
+        const toast = $("#toast");
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 2300);
+      }
+      function shiftDate(days) {
+        const date = new Date(`${dateInput.value}T00:00:00`);
+        date.setDate(date.getDate() + days);
+        dateInput.value = todayKeyFrom(date);
+        render();
+      }
+      function todayKeyFrom(date) {
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      }
+
+      dateInput.value = todayKey();
+      dateInput.addEventListener("change", render);
+      $("#prevDay").addEventListener("click", () => shiftDate(-1));
+      $("#nextDay").addEventListener("click", () => shiftDate(1));
+      $("#searchInput").addEventListener("input", render);
+      document.querySelectorAll(".filter").forEach((button) => button.addEventListener("click", () => {
+        activeFilter = button.dataset.filter;
+        document.querySelectorAll(".filter").forEach((item) => item.classList.toggle("active", item === button));
+        render();
+      }));
+      $("#studentRows").addEventListener("click", (event) => {
+        const button = event.target.closest("button");
+        if (!button) return;
+        if (button.dataset.status) {
+          const daily = attendanceForDate();
+          if (daily[button.dataset.id] === button.dataset.status) delete daily[button.dataset.id];
+          else daily[button.dataset.id] = button.dataset.status;
+          persist();
+          render();
+        } else if (button.dataset.delete) {
+          const student = state.students.find((item) => item.id === button.dataset.delete);
+          if (!student || !window.confirm(`${student.name} 학생을 출석부에서 삭제할까요?`)) return;
+          state.students = state.students.filter((item) => item.id !== student.id);
+          Object.values(state.attendance).forEach((daily) => delete daily[student.id]);
+          delete colors[student.id];
+          persist();
+          render();
+          showToast(`${student.name} 학생을 삭제했어요.`);
+        }
+      });
+      const modal = $("#modalBackdrop");
+      function closeModal() { modal.classList.remove("open"); $("#studentForm").reset(); }
+      $("#addButton").addEventListener("click", () => { modal.classList.add("open"); $("#studentName").focus(); });
+      $("#closeModal").addEventListener("click", closeModal);
+      $("#cancelModal").addEventListener("click", closeModal);
+      modal.addEventListener("click", (event) => { if (event.target === modal) closeModal(); });
+      document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeModal(); });
+      $("#studentForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const name = $("#studentName").value.trim();
+        const number = $("#studentNumber").value ? Number($("#studentNumber").value) : null;
+        if (!name) return;
+        if (number && state.students.some((student) => Number(student.number) === number)) {
+          $("#studentNumber").setCustomValidity("이미 사용 중인 번호입니다.");
+          $("#studentNumber").reportValidity();
+          $("#studentNumber").setCustomValidity("");
+          return;
+        }
+        const id = `s${Date.now()}${Math.random().toString(36).slice(2, 6)}`;
+        const student = { id, name, number, note: $("#studentNote").value.trim() };
+        state.students.push(student);
+        colors[id] = Object.keys(colors).length % palette.length;
+        persist();
+        closeModal();
+        render();
+        showToast(`${name} 학생을 추가했어요.`);
+      });
+      $("#exportButton").addEventListener("click", () => {
+        if (!state.students.length) { showToast("내보낼 학생이 없습니다."); return; }
+        const rows = [["번호", "이름", "출석 상태", "메모"], ...state.students
+          .slice().sort((a, b) => Number(a.number || 999) - Number(b.number || 999))
+          .map((student) => [student.number || "", student.name, ({ present: "출석", late: "지각", absent: "결석" })[statusFor(student)] || "미체크", student.note || ""])];
+        const csv = "\uFEFF" + rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\r\n");
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+        link.download = `출석부_${dateInput.value}.csv`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        showToast("출석부 CSV 파일을 저장했어요.");
+      });
+      render();
+    })();
+  </script>
+</body>
+</html>
